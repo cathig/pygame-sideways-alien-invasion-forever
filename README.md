@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Aug 30 09:54:34 2020
-
-@author: Cathig
-"""
 # Sideways Alien Invasion
-Welcome to Sideways Alien Invasion -- the game that never ends!
+Welcome to Sideways Alien Invasion!
 
 In this exercise from _Python Crash Course_ 2nd Ed (Chapter 13 p. 272), I practiced modifying the main tutorial game -- a traditional vertical Alien Invasion -- into a horizontal game.
 
@@ -21,12 +15,12 @@ When a bullet collides with an alien spaceship, the program removes the bullet a
 
 If the player destroys all the alien spaceships, the program removes any remaining bullets and launches a new fleet of alien spaceships.
 
-And it never ends.
+For 3 times, if an alien spaceship collides with the rocket or the left side of the screen, the program removes remaining bullets and alien spaceships, resets the rocket in the center left, and launches a new fleet of alien spaceships.
 
-Unless you close it.
+After the 3rd time an alien spaceship collides with the rocket of the left side of the screen, the game is set to an inactive state.
 
 
-![sample Sideways Shooter screen](/images/sampleScreen.png)
+![sample Sideways Alien Invasion screen](/images/sampleScreen.png)
 
 ## How to Use
 1. Run alien_invasion.py.
