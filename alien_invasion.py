@@ -9,6 +9,7 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -30,6 +31,40 @@ class AlienInvasion:
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
+
+        self._create_fleet()
+
+    def _create_fleet(self):
+        """Create the fleet of aliens."""
+        # Create an alien and find the number of aliens in a column.
+        # Spacing between each alien is equal to one alien height.
+        alien = Alien(self)
+        alien_width, alien_height = alien.rect.size
+        available_space_y = self.settings.screen_height - (2 * alien_height)
+        number_aliens_y = available_space_y // (2 * alien_height)
+
+        # Determine the number of columns of aliens that fit on the screen.
+        ship_width = self.ship.rect.width
+        available_space_x = (self.settings.screen_width -
+                             (3 * alien_width) - ship_width)
+        number_columns = available_space_x // (2 * alien_width)
+
+        # Create the full fleet of aliens.
+        for column_number in range(number_columns):
+            for alien_number in range(number_aliens_y):
+                self._create_alien(alien_number, column_number)
+
+    def _create_alien(self, alien_number, column_number):
+        """Create an alien and place it in the column."""
+        alien = Alien(self)
+        alien_width, alien_height = alien.rect.size
+        alien.y = alien_height + 2 * alien_height * alien_number
+        alien.rect.y = alien.y
+        alien.rect.x = self.settings.screen_width - (
+            alien.rect.width + 2 * alien.rect.width * column_number)
+        self.aliens.add(alien)
+
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -37,7 +72,29 @@ class AlienInvasion:
             self._check_events()
             self.ship.update()
             self._update_bullets()
+            self._update_aliens()
             self._update_screen()
+
+    def _update_aliens(self):
+        """Update the positions of all aliens in the fleet."""
+        self._check_fleet_edges()
+        self.aliens.update()
+
+    def _check_fleet_edges(self):
+        """Respond appropriately if any aliens have reached an edge."""
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                self._change_fleet_direction()
+                break
+        for alien in self.aliens.copy():
+            if alien.rect.right < 0:
+                self.aliens.remove(alien)
+
+    def _change_fleet_direction(self):
+        """Move the entire fleet left and change its vertical movement."""
+        for alien in self.aliens.sprites():
+            alien.rect.x -= self.settings.fleet_approach_speed
+        self.settings.fleet_direction *= -1
 
     def _update_bullets(self):
         # Update bullet positions
@@ -47,7 +104,21 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.left > self.settings.screen_width:
                 self.bullets.remove(bullet)
-        # print(len(self.bullets)) # test bullet removal
+
+        self._check_bullet_alien_collisions()
+
+    def _check_bullet_alien_collisions(self):
+        """Respond to bullet-alien collisions."""
+        # Remove bullets and aliens that have collided.
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens,
+            # False #set to False for testing - bullet survivies collision
+            True
+            , True)
+        if not self.aliens:
+            # Destroy existing bullets and create new fleet.
+            self.bullets.empty()
+            self._create_fleet()
 
     def _check_events(self):
         """Respond to key presses and mouse events."""
@@ -92,6 +163,7 @@ class AlienInvasion:
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
+        self.aliens.draw(self.screen)
         # Make the most recently drawn screen visible.
         pygame.display.flip()
 
